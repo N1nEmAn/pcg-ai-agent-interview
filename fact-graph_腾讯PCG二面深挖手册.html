@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PCG 二面深挖手册 · fact-graph / fgc</title>
+<style>
+:root{--bg:#07121f;--panel:#0e1e32;--panel2:#122b45;--line:#2b4965;--text:#edf6ff;--muted:#9db4ca;--cyan:#5bdcff;--orange:#ffc46b;--green:#79e5aa;--pink:#ff809d;--purple:#bd9cff;--shadow:0 18px 45px #0005}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 88% 0,#19476b 0,#07121f 38%,#07121f 100%);color:var(--text);font:16px/1.75 system-ui,-apple-system,"PingFang SC","Microsoft Yahei",sans-serif}a{color:var(--cyan)}main{max-width:1220px;margin:auto;padding:24px 20px 80px}.nav{position:sticky;top:0;z-index:10;background:#081624ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:10px max(18px,calc((100vw - 1220px)/2));display:flex;gap:7px;overflow:auto;white-space:nowrap}.nav a{color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:7px}.nav a:hover{background:#17344e;color:var(--text)}.nav .brand{font-weight:800;color:var(--cyan);margin-right:auto}.hero{padding:54px 0 34px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:2px;font-weight:800}.hero h1{font-size:clamp(35px,6vw,70px);line-height:1.06;margin:12px 0;max-width:950px;background:linear-gradient(110deg,#fff 20%,var(--cyan));background-clip:text;color:transparent}.hero p{max-width:900px;color:var(--muted);font-size:19px}.hero strong{color:var(--text)}.pills{display:flex;flex-wrap:wrap;gap:8px}.pill{border:1px solid #3c6686;border-radius:99px;color:#c9f2ff;padding:3px 11px;font-size:13px}.section{margin-top:48px;scroll-margin-top:68px}.section>h2{font-size:30px;line-height:1.2;margin:0 0 18px;border-left:5px solid var(--orange);padding-left:13px}.section>h2 span{display:block;color:var(--orange);font-size:13px;letter-spacing:1px;margin-bottom:4px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}.card{background:linear-gradient(145deg,#132942,#0c1a2c);border:1px solid var(--line);border-radius:17px;padding:19px;box-shadow:var(--shadow)}.card h3{margin:0 0 8px;line-height:1.35}.card h4{margin:15px 0 4px;color:#d8f0ff}.muted{color:var(--muted)}.hot{color:var(--orange);font-weight:800}.good{color:var(--green)}.danger{color:var(--pink)}.quote{background:#081725;border:1px dashed #53748b;border-radius:12px;padding:14px 16px;color:#dcefff}.callout{border-left:4px solid var(--cyan);background:#0d2438;padding:13px 16px;border-radius:0 10px 10px 0;margin:14px 0}.callout b{color:var(--cyan)}.flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:15px 0}.step{background:#12324d;border:1px solid #347093;border-radius:10px;padding:8px 12px;color:#def5ff}.arrow{color:var(--orange);font-size:23px}.diagram{background:#06101b;border:1px solid #25435e;border-radius:14px;padding:14px;overflow:auto}.diagram svg{min-width:720px;width:100%;height:auto}.box{fill:#112c45;stroke:#4c88a8;stroke-width:1.5}.box2{fill:#263452;stroke:#9e83e3;stroke-width:1.5}.box3{fill:#203b31;stroke:#67cf9a;stroke-width:1.5}.svgtext{fill:#e8f5ff;font:15px system-ui,"PingFang SC","Microsoft Yahei",sans-serif}.svgtiny{fill:#adc6d7;font:12px system-ui,"PingFang SC","Microsoft Yahei",sans-serif}.svgline{stroke:#ffc46b;stroke-width:2;fill:none;marker-end:url(#arrow)}.table{width:100%;border-collapse:collapse;font-size:14px}.table th,.table td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}.table th{background:#15324d;color:#e2f5ff}.table td{color:#c6d7e5}code{background:#06111c;border:1px solid #1b3850;border-radius:5px;color:#a9efff;padding:1px 5px;font-size:.92em}.code{background:#06101b;border:1px solid #233f58;border-radius:10px;color:#bfeeff;padding:13px 15px;overflow:auto;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}.code .key{color:#ffc875}.code .comment{color:#86a4b8}.heat{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.heat-card{border:1px solid var(--line);border-radius:12px;padding:13px;background:#0c1c2e}.heat-card strong{display:block;font-size:25px;color:var(--orange)}.heat-card span{color:var(--muted);font-size:13px}details{background:#0c1a2b;border:1px solid var(--line);border-radius:12px;margin:9px 0;padding:13px 16px}summary{cursor:pointer;color:#e6f3ff;font-weight:750}details p{color:#c6d5e3;margin:10px 0 0}details ul{color:#c6d5e3}.badge{display:inline-block;font-size:12px;border-radius:5px;padding:1px 6px;margin-left:4px}.p0{background:#6e2f3c;color:#ffd9df}.p1{background:#624b25;color:#ffe5a6}.p2{background:#234768;color:#c6edff}.qcard{border-left:3px solid var(--purple);padding-left:15px;margin:15px 0}.qcard h3{margin:0 0 4px}.qcard p{margin:5px 0;color:#c9d9e7}.answer{background:#092117;border-left:3px solid var(--green);padding:10px 13px;border-radius:0 8px 8px 0;color:#c9efd8;margin-top:9px}.avoid{background:#281721;border-left:3px solid var(--pink);padding:10px 13px;border-radius:0 8px 8px 0;color:#ffd2db;margin-top:9px}.checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}.checklist label{background:#0b1a2b;border:1px solid var(--line);border-radius:9px;padding:10px 12px;cursor:pointer}.checklist input{accent-color:var(--cyan);margin-right:8px}.checklist input:checked+span{text-decoration:line-through;color:#718ba2}.search{width:100%;background:#081725;color:var(--text);border:1px solid #375a76;border-radius:8px;padding:10px 12px;font:inherit}.hidden{display:none!important}.small{font-size:13px;color:var(--muted)}footer{margin-top:60px;border-top:1px solid var(--line);padding-top:20px;text-align:center;color:var(--muted);font-size:13px}@media(max-width:700px){main{padding:13px 13px 60px}.hero{padding-top:34px}.hero p{font-size:16px}.section>h2{font-size:25px}.nav{padding:8px 10px}.nav .brand{margin-right:0}.table{font-size:13px}.table th,.table td{padding:7px}.diagram svg{min-width:650px}}@media print{body{background:#fff;color:#111}.nav{display:none}.card,details,.diagram{background:#fff;color:#111;box-shadow:none;border-color:#aaa;break-inside:avoid}.hero h1{color:#111}.muted,.card p,details p,.table td{color:#333}.code{background:#f4f4f4;color:#111}.section{break-inside:auto}}
+</style>
+</head>
+<body>
+<nav class="nav"><a class="brand" href="#top">PCG 二面 · fgc</a><a href="#forecast">预测</a><a href="#architecture">架构</a><a href="#deep">深挖点</a><a href="#qa">问题卡</a><a href="#answers">话术</a><a href="#practice">自测</a></nav>
+<main id="top">
+<header class="hero">
+<div class="eyebrow">TENCENT PCG · SECOND ROUND PREP · FACT-GRAPH / FGC</div>
+<h1>二面会从“你做了什么”，追到“它为什么可靠”。</h1>
+<p>你的项目不是一个普通的聊天机器人插件，而是一个<strong>项目级、可持久化、可查询、可恢复的 Agent 工作记忆图</strong>。二面最可能围绕数据模型、并发一致性、上下文管理、执行安全和它如何服务智能渗透展开。</p>
+<div class="pills"><span class="pill">项目深挖</span><span class="pill">系统设计</span><span class="pill">安全边界</span><span class="pill">代码细节</span><span class="pill">召回评测</span></div>
+</header>
+
+<section class="section" id="forecast"><h2><span>01 · INTERVIEW MAP</span>基于一面纪要和仓库代码的二面预测</h2>
+<div class="callout"><b>先统一项目名称：</b>面试时叫 <b>fact-graph / fgc</b>。它不是传统意义上的 CFG（Control Flow Graph，控制流图），也不是向量数据库或完整的 Agent 后端。</div>
+<div class="heat">
+<div class="heat-card"><strong>★★★★★</strong><span>fact/intent 数据模型、为什么用图、如何恢复任务</span></div>
+<div class="heat-card"><strong>★★★★★</strong><span>文件锁、原子写入、并发 Agent、重复完成和崩溃恢复</span></div>
+<div class="heat-card"><strong>★★★★☆</strong><span>主 Agent/Worker Agent、上下文压缩、经验复用</span></div>
+<div class="heat-card"><strong>★★★★☆</strong><span>Prompt Injection、scope、凭据、tmux peer 授权</span></div>
+<div class="heat-card"><strong>★★★★☆</strong><span>如何迁移到智能渗透、verifier 和漏洞召回率</span></div>
+<div class="heat-card"><strong>★★★☆☆</strong><span>Python/SQL/系统设计、失败复盘、实习安排</span></div>
+</div>
+<div class="card"><h3>二面最可能的节奏</h3><div class="flow"><span class="step">一面项目追问</span><span class="arrow">→</span><span class="step">让你画 fgc 架构</span><span class="arrow">→</span><span class="step">挑战并发/安全边界</span><span class="arrow">→</span><span class="step">迁移到渗透 Agent</span><span class="arrow">→</span><span class="step">追问指标和落地</span></div><p class="muted">面试官可能故意问“如果两个 Agent 同时完成同一个 intent 怎么办”“如果事实图被网页内容污染怎么办”“你现在的 verify 到底是不是独立 verifier”，用来判断你是否真正理解系统边界。</p></div>
+</section>
+
+<section class="section" id="architecture"><h2><span>02 · PROJECT MODEL</span>先把项目画成一张图</h2>
+<div class="diagram">
+<svg viewBox="0 0 1040 430" role="img" aria-label="fact graph architecture">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#ffc46b"/></marker></defs>
+<rect class="box" x="32" y="42" width="205" height="70" rx="12"/><text class="svgtext" x="55" y="73">Claude Code / 用户</text><text class="svgtiny" x="55" y="96">目标、问题、当前对话</text>
+<rect class="box" x="32" y="172" width="205" height="84" rx="12"/><text class="svgtext" x="55" y="205">项目级 Hook</text><text class="svgtiny" x="55" y="228">SessionStart / UserPromptSubmit</text><text class="svgtiny" x="55" y="246">注入摘要和当前时间</text>
+<rect class="box2" x="320" y="77" width="230" height="185" rx="12"/><text class="svgtext" x="350" y="112">fgc CLI</text><text class="svgtiny" x="350" y="140">status / graph / recall</text><text class="svgtiny" x="350" y="161">fact / intent / done</text><text class="svgtiny" x="350" y="182">dispatch / auto / view</text><text class="svgtiny" x="350" y="203">peers / send / capture</text><text class="svgtiny" x="350" y="238">Python 标准库，零依赖</text>
+<rect class="box3" x="650" y="32" width="330" height="270" rx="12"/><text class="svgtext" x="680" y="69">项目本地 .fg/</text><text class="svgtiny" x="680" y="99">project.json：目标、计数器、状态</text><text class="svgtiny" x="680" y="125">facts/*.json：不可变确认事实</text><text class="svgtiny" x="680" y="151">intents/*.json：工作单元和依赖边</text><text class="svgtiny" x="680" y="177">hints/*.json：给指挥者的留言</text><text class="svgtiny" x="680" y="203">ai-peers.json：用户授权的 peer</text><text class="svgtiny" x="680" y="229">ai-channel.txt：通信追加日志</text><text class="svgtiny" x="680" y="267">fcntl 锁 + 临时文件 + os.replace</text>
+<rect class="box2" x="320" y="328" width="230" height="70" rx="12"/><text class="svgtext" x="350" y="359">Claude CLI</text><text class="svgtiny" x="350" y="382">reason / explore / verify prompt</text>
+<rect class="box" x="650" y="340" width="330" height="58" rx="12"/><text class="svgtext" x="680" y="375">tmux peers / HTML DAG view</text>
+<path class="svgline" d="M237 77 L320 120"/><path class="svgline" d="M237 214 L320 185"/><path class="svgline" d="M550 140 L650 140"/><path class="svgline" d="M435 262 L435 328"/><path class="svgline" d="M550 362 L650 362"/><path class="svgline" d="M550 220 L650 340"/>
+</svg>
+</div>
+<div class="grid">
+<div class="card"><h3>一口气说清楚</h3><p>fgc 把 Agent 工作拆成两类节点：已确认的 fact 和待完成的 intent。fact 是图上的节点，intent 是依赖若干事实、产出新事实的工作边。所有状态落在项目目录的 <code>.fg/</code> 中，Claude Code 的 hook 每轮注入压缩后的图状态，调度器通过 prompt 驱动 reason、explore 和 verify。</p></div>
+<div class="card"><h3>事实和工作分离</h3><p>“服务器返回 200”是观察事实；“验证对象级授权”是 intent。把猜测、正在做的事和已确认结果分开，后续 Agent 才不会把假设当结论，也能从中断处继续。</p></div>
+</div>
+</section>
+
+<section class="section" id="graph"><h2><span>03 · DATA MODEL</span>fact / intent / frontier：面试官会问到字段级</h2>
+<div class="diagram">
+<svg viewBox="0 0 980 280" role="img" aria-label="fact intent DAG">
+<defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#ffc46b"/></marker></defs>
+<rect class="box3" x="35" y="108" width="135" height="62" rx="12"/><text class="svgtext" x="62" y="137">goal fact</text><text class="svgtiny" x="51" y="157">任务终点描述</text>
+<rect class="box2" x="240" y="80" width="155" height="118" rx="12"/><text class="svgtext" x="275" y="111">i001 intent</text><text class="svgtiny" x="258" y="136">from: goal?（仅示意）</text><text class="svgtiny" x="258" y="157">to: f001</text><text class="svgtiny" x="258" y="178">status: done</text>
+<rect class="box3" x="475" y="108" width="135" height="62" rx="12"/><text class="svgtext" x="502" y="137">f001 fact</text><text class="svgtiny" x="488" y="157">确认的观察</text>
+<rect class="box2" x="680" y="80" width="155" height="118" rx="12"/><text class="svgtext" x="716" y="111">i002 intent</text><text class="svgtiny" x="698" y="136">from: f001</text><text class="svgtiny" x="698" y="157">to: null</text><text class="svgtiny" x="698" y="178">frontier: ready</text>
+<path d="M170 139 L240 139" stroke="#ffc46b" stroke-width="2" marker-end="url(#arrow2)"/><path d="M395 139 L475 139" stroke="#ffc46b" stroke-width="2" marker-end="url(#arrow2)"/><path d="M610 139 L680 139" stroke="#ffc46b" stroke-width="2" marker-end="url(#arrow2)"/>
+</svg>
+</div>
+<table class="table"><tr><th>对象</th><th>在项目里的含义</th><th>面试要点</th></tr><tr><td>fact</td><td>已确认的观察或可复现结果，写入后不可变</td><td>防止 Agent 把猜测覆盖成事实；详细证据放 doc，需要时用 <code>fgc doc</code> 读取</td></tr><tr><td>intent</td><td>一个工作单元，<code>from</code> 是依赖事实，<code>to</code> 是产出事实</td><td>状态由图结构表达：open/claimed/done/confirmation；依赖满足后进入 frontier</td></tr><tr><td>hint</td><td>给 commander 的人类留言</td><td>不混入事实，防止临时建议被误当已验证结果</td></tr><tr><td>frontier</td><td>当前依赖已满足、可执行的 intent 集合</td><td>可以并行调度，但要处理 claim、超时和重复完成</td></tr></table>
+<div class="callout"><b>一个容易被问的点：</b>fact graph 的“图”不靠图数据库实现，而是每个节点一个 JSON 文件，intent 的 <code>from/to</code> 形成 DAG。这样可读、可 diff、易恢复；当节点数量和查询复杂度增长时，SQLite 或专门索引会更合适。</div>
+</section>
+
+<section class="section" id="deep"><h2><span>04 · ENGINEERING DEEP DIVE</span>代码层面最可能的追问</h2>
+<div class="qcard"><h3>Q1 · 两个 Agent 同时完成同一个 intent，怎么避免重复？ <span class="badge p0">P0</span></h3><p><b>面试官想听：</b>不是一句“加锁”，而是锁住什么、何时再次检查、失败后留下什么。</p><div class="answer"><b>你的回答：</b>Store 的写入通过项目级 lock 文件和 <code>fcntl.flock</code> 串行化。执行器完成任务后进入同一临界区，再读取 intent 检查 <code>to</code> 是否已经存在；只有仍然开放时才分配事实 ID、写事实并回写 intent。这样第二个执行器会发现 intent 已结束并丢弃重复结果。代码里的 <code>conclude_with_new_fact</code> 还把 fact 写入和 intent 关联放在同一个应用级锁中。</div><div class="avoid"><b>边界：</b>这保证了本地多进程并发下的互斥和重复检查，不等于跨机器分布式锁，也不是数据库级崩溃事务。</div></div>
+<div class="qcard"><h3>Q2 · 原子写入解决什么？ <span class="badge p0">P0</span></h3><p><b>你的回答：</b>先把 JSON 写到同目录临时文件，再用 <code>os.replace</code> 替换目标文件，避免读者看到半截 JSON；<code>fcntl</code> 保护同一项目的并发写入。它解决文件级可见性和写入竞争，不能自动保证多个文件跨崩溃的一致提交。</p></div>
+<div class="qcard"><h3>Q3 · 如果进程写完 fact 后就在回写 intent 前崩溃呢？ <span class="badge p0">P0</span></h3><p><b>高质量回答：</b>当前设计在同一个锁里执行，能防并发交错；但文件系统没有跨文件事务，理论上仍要考虑事实已落盘而 intent 未链接的孤儿节点。可以用启动时一致性检查、事务日志/commit marker、写入顺序和恢复扫描解决。面试时不要把应用级锁说成完整数据库事务。</p></div>
+<div class="qcard"><h3>Q4 · 为什么不用 SQLite 或 Redis？ <span class="badge p0">P0</span></h3><p><b>你的回答：</b>当前目标是在 Claude Code 项目内部提供轻量、可 diff、零依赖、可恢复的工作记忆，JSON 文件更容易人工检查和随项目移动。SQLite 更适合复杂查询、事务和大量节点；Redis 适合共享服务和低延迟，但引入了服务和生命周期。项目规模上来后可以把存储抽象成接口，再换 SQLite/Postgres，保留 fact/intent 语义。</p></div>
+<div class="qcard"><h3>Q5 · recall 是向量检索吗？ <span class="badge p1">P1</span></h3><p><b>准确回答：</b>当前 <code>fgc recall</code> 是轻量文本相似度：分词重叠加 difflib 兜底，不是 embedding 向量数据库。它适合少量本地事实的快速复用；大量节点、语义改写或跨项目检索时，需要倒排索引、embedding 或混合检索，并保留来源和置信度。</p></div>
+<div class="qcard"><h3>Q6 · 当前 verify 真的是独立验证器吗？ <span class="badge p0">P0</span></h3><p><b>准确回答：</b>仓库有 <code>dispatch verify</code> 和 <code>verify.md</code>，它会读取 intent 和产出 fact，再调用 Claude 判断 verified/issues；但目前主要是对结果做二次审阅，并不会自动重新执行漏洞请求，也没有把验证状态完整写回事实图。因此它是核验流程的原型，不应包装成独立安全 verifier。</p><div class="callout"><b>改进方向：</b>为安全任务增加结构化证据、可复现请求、差分响应、canary 日志、规则检查和独立状态字段，让 verifier 能输出 confirmed / inconclusive / rejected。</div></div>
+</div>
+</section>
+
+<section class="section" id="security"><h2><span>05 · SECURITY BOUNDARY</span>面试官会把你的 Agent 往攻击面上推</h2>
+<div class="grid">
+<div class="card"><h3>图里的内容可信吗？</h3><p>不自动可信。fact 可能来自代码、网页、工具输出或之前的 Agent；模板把 graph block 标成 untrusted data，要求模型把其中的“运行命令”当观察内容。这个是提示层防护，不能替代沙箱、文件权限和网络隔离。</p></div>
+<div class="card"><h3><code>--skip-permissions</code> 的风险</h3><p>如果不可信仓库里的 <code>.fg/*.json</code> 被拼入 prompt，同时 executor 拥有 shell 权限并跳过确认，恶意事实可能诱导 Agent 执行命令。运行 autonomous mode 前要确认 graph 来源、scope 和权限。</p></div>
+<div class="card"><h3>peer 通信为什么要授权</h3><p><code>fgc peers --discover</code> 只列出 tmux pane；只有用户用 <code>peers --add</code> 明确授权后，<code>send/capture</code> 才能访问目标。配置在项目本地 <code>.fg/ai-peers.json</code>，消息记录到 channel 文件。</p></div>
+<div class="card"><h3>凭据和租户隔离</h3><p>图里应保存凭据引用和角色上下文，避免把 token 原文写入 fact；工具层按 scope、身份和目标 allowlist 做二次检查；跨租户事实、会话和报告要隔离。</p></div>
+</div>
+<details><summary>如果面试官问：为什么把外部文本标为不可信还不够？</summary><p>因为模型可能仍然被诱导，文本防护没有阻止工具访问内网、读取文件或外发数据。真正的安全边界应在策略层、工具 schema、网络 egress、进程沙箱、凭据托管和人工审批中。Prompt 只负责告诉模型如何解释数据，不能赋予或撤销操作权限。</p></details>
+</section>
+
+<section class="section" id="agent"><h2><span>06 · MIGRATE TO PENTEST</span>怎样把 fact-graph 迁移到智能渗透 Agent</h2>
+<div class="card"><div class="flow"><span class="step">scope / 目标</span><span class="arrow">→</span><span class="step">资产 fact</span><span class="arrow">→</span><span class="step">身份/状态 fact</span><span class="arrow">→</span><span class="step">漏洞 hypothesis intent</span><span class="arrow">→</span><span class="step">工具执行</span><span class="arrow">→</span><span class="step">证据 fact</span><span class="arrow">→</span><span class="step">verifier / report</span></div></div>
+<table class="table"><tr><th>fact-graph 概念</th><th>渗透 Agent 对应物</th><th>注意点</th></tr><tr><td>fact</td><td>已发现端点、角色、响应差异、canary request-id、代码 sink</td><td>只写确认结果；推测放 hypothesis，不要污染事实</td></tr><tr><td>intent</td><td>枚举 JS API、用 A/B 角色验证对象权限、验证 SSRF canary</td><td>每个 intent 有范围、成功证据、预算和终止条件</td></tr><tr><td>frontier</td><td>当前满足前置条件、可执行的测试任务</td><td>按风险和信息增益排序，避免重复探索</td></tr><tr><td>doc</td><td>请求/响应、日志、复现步骤和修复建议</td><td>正文摘要进入上下文，细节按需读取</td></tr></table>
+<div class="callout"><b>迁移时要补的东西：</b>通用 fact graph 只负责记忆和任务依赖；渗透场景还需要 scope enforcement、凭据隔离、危险命令策略、结构化漏洞 schema、独立 verifier、证据等级和 recall/precision benchmark。</div>
+</section>
+
+<section class="section" id="eval"><h2><span>07 · EVALUATION</span>二面可能追问：你怎么证明系统真的变好了</h2>
+<div class="grid"><div class="card"><h3>漏洞实例</h3><p>用 <code>(asset, endpoint, vuln_type, parameter, auth_context)</code> 唯一化；预先规定 strict/lenient matching，避免同一漏洞重复报告。</p></div><div class="card"><h3>指标</h3><p><code>Recall = TP/(TP+FN)</code>；同时看 precision、F1、重复率、Token/请求数、p95 延迟、人工审核量和高风险漏洞覆盖。</p></div><div class="card"><h3>漏检分桶</h3><p>Discovery、Auth/State、Coverage、Hypothesis、Tool、Verifier、Report。每次只改一个最大桶，做 baseline、配对消融和 held-out 应用验证。</p></div></div>
+<div class="code"><span class="key">run_id</span>: same benchmark + same accounts + same seed
+<span class="key">budget</span>: max_turns / requests / tokens / timeout
+<span class="key">trace</span>: observation → action → tool_result → verify → report
+<span class="key">compare</span>: baseline vs one changed component
+<span class="key">report</span>: recall, precision, duplicates, cost, p95 latency, failure buckets</div>
+<p class="quote">回答岗位问题时，可以把 fact-graph 作为“让 Agent 记住并复用已确认事实、减少重复探索”的基础设施；召回率提升仍要靠独立 benchmark 和 verifier 证据证明。</p>
+</section>
+
+<section class="section" id="qa"><h2><span>08 · QUESTION CARDS</span>二面高频问题：先自己回答，再展开模板</h2>
+<input class="search" id="qsearch" placeholder="搜索问题，例如：并发、SQLite、Prompt、召回、verifier">
+<div id="questions">
+<details class="qitem"><summary>Q1：为什么做 fact-graph？普通聊天记录不够吗？</summary><p><b>答：</b>聊天记录是线性、难查询、容易把假设和事实混在一起；fact-graph 用不可变 fact、带依赖的 intent 和 frontier 表达“确认了什么、下一步能做什么”，可以跨轮次恢复、减少重复探索，并让人用 git diff 检查。规模增大后再考虑 SQLite 或向量检索。</p></details>
+<details class="qitem"><summary>Q2：fact 为什么不可变？如果发现事实错了怎么办？</summary><p><b>答：</b>不可变保证历史可追溯，纠错时新增一个“旧事实被反证/修正”的 fact，并让后续 intent 依赖新事实；也可以给事实加 provenance、置信度和废弃标记，但不直接覆盖历史。</p></details>
+<details class="qitem"><summary>Q3：DAG 如何保证没有循环？</summary><p><b>答：</b>当前 intent 只引用已经存在的 fact，intent 完成后产出新 fact，正常写入路径天然向前；如果开放原始编辑或导入数据，仍要做依赖检查、拓扑校验和异常图检测，不能只依靠命令约定。</p></details>
+<details class="qitem"><summary>Q4：文件锁在多 Agent 场景下有什么局限？</summary><p><b>答：</b>fcntl 适合同一台 POSIX 主机上的并发进程；NFS、容器跨节点、Windows 或网络分布式环境需要不同的锁服务或数据库事务。还要处理 stale claim、worker 崩溃、租约和重试。</p></details>
+<details class="qitem"><summary>Q5：你怎样处理 Agent 写入的恶意事实？</summary><p><b>答：</b>来源标记、事实 schema、工具结果与模型解释分层、prompt 中明确 untrusted data；执行时仍用 scope、策略、沙箱、网络隔离和权限校验。文本围栏是提醒，不是安全边界。</p></details>
+<details class="qitem"><summary>Q6：主 Agent 和 Worker Agent 为什么这样分工？</summary><p><b>答：</b>主 Agent 保持全局目标、优先级和依赖；Worker 处理窄任务，减少上下文污染和重复推理。共享图让 Worker 交付结构化事实，主 Agent 从 frontier 继续调度。需要防止共享事实冲突、过期和错误传播。</p></details>
+<details class="qitem"><summary>Q7：如果让你把 fgc 用于 IDOR 验证，怎么建图？</summary><p><b>答：</b>先记录 scope、应用、两个身份和自己的对象作为事实；创建“替换对象 ID”的 intent；工具结果记录响应差异和状态变化；确认后写入 BOLA evidence fact；再由 verifier intent 复现并输出 confirmed/inconclusive/rejected；报告节点引用证据而不是只引用模型判断。</p></details>
+<details class="qitem"><summary>Q8：当前项目最需要改进什么？</summary><p><b>答：</b>第一是把 verify 从结果审阅升级成真正可复现的独立验证器并持久化 verdict；第二是给 intent 加租约和恢复策略；第三是补 schema/provenance/confidence 和一致性检查；第四是用授权靶场做 recall、precision、成本和延迟 benchmark；规模化后再抽象存储层。</p></details>
+<details class="qitem"><summary>Q9：你如何证明 fact-graph 减少了重复探索？</summary><p><b>答：</b>当前如果没有严格对照，就不报告提升百分比。可以固定任务集和预算，比较无图、线性历史、fact-graph 三个版本，统计重复工具调用、重复假设、完成率、Token、延迟和成功证据数，再做多次运行和困难任务 held-out。</p></details>
+<details class="qitem"><summary>Q10：这个项目和岗位的关系是什么？</summary><p><b>答：</b>岗位要优化智能渗透 Agent 的覆盖和验证质量，fact-graph 提供了持久状态、任务依赖、经验复用和多 Agent 协作基础；我还需要把通用图扩展为安全 schema、权限边界、独立 verifier 和漏洞评测，才能形成岗位所需的生产闭环。</p></details>
+<details class="qitem"><summary>Q11：如果面试官让你现场写一个 ready frontier，怎么思考？</summary><p><b>答：</b>读取所有 open intent，过滤 requires_confirmation 未确认、已有 worker 租约的节点，再检查 from 中每个 fact 是否存在；按优先级/信息增益排序。并发领取时要在锁内重新检查并写入 worker，避免两个 worker 同时拿到同一个 intent。</p></details>
+<details class="qitem"><summary>Q12：为什么 verify 不能只看模型 confidence？</summary><p><b>答：</b>confidence 是模型自评，可能只是语言流畅。验证器要结合可重复请求、差分响应、状态变化、canary 日志、代码 sink 或规则，证据不足时返回 inconclusive，并进入下一步测试或人工复核。</p></details>
+</div>
+</section>
+
+<section class="section" id="answers"><h2><span>09 · SPEAKING TEMPLATES</span>直接练这三段</h2>
+<div class="card"><h3>30 秒项目介绍</h3><p class="quote">我做了一个叫 fact-graph 的工作记忆工具 fgc，运行在 Claude Code 项目内部。它把已确认事实建成不可变节点，把待完成工作建成依赖事实的 intent，通过项目本地的 JSON 图保存状态，并用 hook、reason、explore、verify 让 Agent 可以恢复工作、减少重复探索。它是轻量的本地原型，当前 verify 还不是完整的独立安全验证器，下一步会加入结构化证据、权限边界和 benchmark。</p></div>
+<div class="card"><h3>90 秒工程细节</h3><p class="quote">存储层每个 fact 和 intent 一个 JSON 文件，project.json 保存目标和计数器；写入用临时文件加 os.replace，项目内并发用 fcntl flock。intent 的 from 指向依赖事实，to 指向产出事实，frontier 是依赖满足且可执行的工作。dispatch 通过 reason、explore、verify 模板调用 Claude CLI，执行结果解析后写回图。并发完成时，在锁内重新检查 intent 是否已有 to，避免重复事实。它的边界是本地 POSIX 并发和应用级一致性，跨节点、崩溃事务、独立 verifier 和指标评测还需要继续补。</p></div>
+<div class="card"><h3>被问“你有什么不足”</h3><p class="quote">我目前最需要补的是生产级安全验证和可量化效果。我已经把 Agent 工作拆成状态、工具、事实和任务依赖，但当前 fgc 的 verify 主要是对执行结果做二次审阅，还没有自动复现请求并持久化独立 verdict。下一步我会在授权靶场建立 ground truth，按漏检环节做消融，报告 recall、precision、成本和延迟。</p></div>
+</section>
+
+<section class="section" id="practice"><h2><span>10 · PRACTICE CHECKLIST</span>二面前自测</h2>
+<div class="checklist"><label><input type="checkbox"><span>能画出 Claude Code → hook → fgc → .fg → dispatch</span></label><label><input type="checkbox"><span>能解释 fact、intent、from、to、frontier</span></label><label><input type="checkbox"><span>能说明 fcntl、os.replace 和重复完成检查</span></label><label><input type="checkbox"><span>能承认跨文件崩溃事务的局限</span></label><label><input type="checkbox"><span>能区分文本防注入和真正沙箱</span></label><label><input type="checkbox"><span>能解释 fgc recall 不是向量检索</span></label><label><input type="checkbox"><span>能说清当前 verify 的真实边界</span></label><label><input type="checkbox"><span>能把 fact graph 映射到 IDOR/SSRF 验证</span></label><label><input type="checkbox"><span>能给出 recall benchmark 和 FN 分桶</span></label><label><input type="checkbox"><span>准备一个没有量化收益也不夸大的回答</span></label><label><input type="checkbox"><span>统一腾讯比赛排名和漏洞确认状态</span></label><label><input type="checkbox"><span>能说清每周出勤和实习时长</span></label></div>
+<div class="callout"><b>最容易被追问的一句：</b>“你的系统现在真正自动验证了什么？”建议直接回答实现边界，随后说清下一步如何通过独立请求、差分、日志和状态证据补齐。</div>
+</section>
+<footer>本手册根据公开仓库 claude-fact-graph 的 README、SKILL、lib/fg.py、fg-hook.py、templates 和一面纪要整理。项目事实以当前代码为准；没有实测指标就不要临场补数字。</footer>
+</main>
+<script>
+(function(){
+var input=document.getElementById('qsearch');
+var items=[].slice.call(document.querySelectorAll('.qitem'));
+input.addEventListener('input',function(){
+ var q=input.value.toLowerCase().trim();
+ items.forEach(function(item){item.classList.toggle('hidden',q && item.innerText.toLowerCase().indexOf(q)<0);});
+});
+var checks=[].slice.call(document.querySelectorAll('.checklist input'));
+var key='fgc-second-round-checks';
+try{var saved=JSON.parse(localStorage.getItem(key)||'[]');checks.forEach(function(c,i){c.checked=!!saved[i];});}catch(e){}
+checks.forEach(function(c){c.addEventListener('change',function(){try{localStorage.setItem(key,JSON.stringify(checks.map(function(x){return x.checked;})));}catch(e){}});});
+})();
+</script>
+</body>
+</html>
