@@ -13,12 +13,13 @@
 </li>
 <li><a href="#2-sql">2. SQL 注入：重点掌握代码</a><ul>
 <li><a href="#21">2.1 原理</a></li>
-<li><a href="#22">2.2 参数化查询</a></li>
-<li><a href="#23">2.3 参数化的局限</a></li>
-<li><a href="#24">2.4 数据库最小权限</a></li>
-<li><a href="#25">2.5 错误回显</a></li>
-<li><a href="#26-sql">2.6 SQL 回归测试</a></li>
-<li><a href="#27-30">2.7 30 秒回答</a></li>
+<li><a href="#22">2.2 预编译为什么能防注入</a></li>
+<li><a href="#23">2.3 参数化查询</a></li>
+<li><a href="#24">2.4 参数化的局限</a></li>
+<li><a href="#25">2.5 数据库最小权限</a></li>
+<li><a href="#26">2.6 错误回显</a></li>
+<li><a href="#27-sql">2.7 SQL 回归测试</a></li>
+<li><a href="#28-30">2.8 30 秒回答</a></li>
 </ul>
 </li>
 <li><a href="#3-xss">3. XSS：不要只说“过滤”</a><ul>
@@ -190,7 +191,30 @@ Origin: https://shop.example
 <blockquote>
 <p>不可信数据和 SQL 语法混在一起，数据库会重新解析输入中的特殊字符。</p>
 </blockquote>
-<h3 id="22">2.2 参数化查询</h3>
+<h3 id="22">2.2 预编译为什么能防注入</h3>
+<p>普通字符串拼接的执行过程大致是：</p>
+<div class="codehilite"><pre><span></span><code>用户输入 → 拼进完整 SQL 字符串 → 数据库解析 SQL 结构和输入 → 执行
+</code></pre></div>
+
+<p>如果输入中包含引号、括号或其他 SQL 语法，拼接后的字符串会被数据库重新解析，输入就可能改变原来的查询结构。</p>
+<p>预编译把过程拆成两个阶段：</p>
+<div class="codehilite"><pre><span></span><code>Prepare：数据库先解析固定 SQL 结构，? 是参数占位符
+Bind：   驱动把用户输入作为独立参数传给占位符
+Execute：数据库按已经确定的结构执行
+</code></pre></div>
+
+<p>例如：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">statement</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span>
+    <span class="s2">"SELECT id FROM users WHERE username = ?"</span>
+<span class="p">)</span>
+<span class="n">statement</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span>
+<span class="n">statement</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</code></pre></div>
+
+<p>数据库已经在 <code>Prepare</code> 阶段确定了 <code>SELECT ... WHERE username = ?</code> 的语法结构。<code>username</code> 在 <code>Bind</code> 阶段只是一个值，即使里面包含引号或 SQL 片段，也不会重新变成查询语法。驱动通常会通过数据库协议传递参数并处理类型，不需要开发者自己给输入加引号或转义。</p>
+<p>可以把它理解成填表：SQL 语句是已经印好的表格，用户输入只能填进指定的空格，不能把表格的标题和结构改掉。</p>
+<p>面试时还要注意一个实现细节：有些驱动默认使用“客户端模拟预编译”，先在客户端拼接字符串，再发送给数据库；应确认驱动配置使用真正的服务端 prepared statement，或确认驱动的参数处理实现是安全的。预编译也只保护参数值，不能让用户直接决定表名、列名或 SQL 结构。</p>
+<h3 id="23">2.3 参数化查询</h3>
 <p>Python 常见写法：</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># 正确：SQL 结构和用户数据分开</span>
 <span class="n">sql</span> <span class="o">=</span> <span class="s2">"SELECT id FROM users WHERE username = ?"</span>
@@ -224,7 +248,7 @@ Origin: https://shop.example
 <li>不要先用字符串格式化再传给 execute；</li>
 <li>不要自己给输入加引号。</li>
 </ul>
-<h3 id="23">2.3 参数化的局限</h3>
+<h3 id="24">2.4 参数化的局限</h3>
 <p>参数化主要处理“值”，通常不能直接处理：</p>
 <ul>
 <li>动态表名；</li>
@@ -251,7 +275,7 @@ Origin: https://shop.example
 </code></pre></div>
 
 <p>这里的 f-string 只拼接服务端字典中的固定值，不能拼接原始用户输入。</p>
-<h3 id="24">2.4 数据库最小权限</h3>
+<h3 id="25">2.5 数据库最小权限</h3>
 <p>应用账号只拥有业务需要的权限：</p>
 <ul>
 <li>不使用 root 连接业务；</li>
@@ -260,7 +284,7 @@ Origin: https://shop.example
 <li>不同服务尽量使用不同账号；</li>
 <li>凭据放在安全的配置或密钥系统中。</li>
 </ul>
-<h3 id="25">2.5 错误回显</h3>
+<h3 id="26">2.6 错误回显</h3>
 <p>服务端日志保留详细错误，客户端只返回通用信息：</p>
 <div class="codehilite"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
@@ -270,7 +294,7 @@ Origin: https://shop.example
 </code></pre></div>
 
 <p>不要向客户端返回 SQL、堆栈、数据库地址和账号信息。</p>
-<h3 id="26-sql">2.6 SQL 回归测试</h3>
+<h3 id="27-sql">2.7 SQL 回归测试</h3>
 <p>修复后检查：</p>
 <ul>
 <li>普通查询仍正常；</li>
@@ -281,7 +305,7 @@ Origin: https://shop.example
 <li>代码中没有绕过 ORM 的字符串拼接；</li>
 <li>数据库账号权限符合最小权限。</li>
 </ul>
-<h3 id="27-30">2.7 30 秒回答</h3>
+<h3 id="28-30">2.8 30 秒回答</h3>
 <blockquote>
 <p>SQL 注入的根因是把不可信输入通过字符串拼接变成 SQL 语法。查询值使用参数化或预编译，让输入始终作为数据；动态表名、列名和排序字段不能直接参数化，就使用服务端固定映射或严格白名单。数据库账号还要最小权限，错误信息不能向客户端回显。回归时覆盖特殊输入、登录搜索排序等路径，确认输入不会改变 SQL 结构。</p>
 </blockquote>
