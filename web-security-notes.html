@@ -1,0 +1,660 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>腾讯 PCG 二面 Web 安全具体修复学习笔记</title><style>
+:root{--bg:#07121f;--panel:#0e1e32;--line:#2b4965;--text:#edf6ff;--muted:#a8bdd0;--cyan:#5bdcff;--orange:#ffc46b;--green:#79e5aa}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 85% 0,#19476b 0,#07121f 38%,#07121f 100%);color:var(--text);font:16px/1.8 system-ui,-apple-system,"PingFang SC","Microsoft Yahei",sans-serif}a{color:var(--cyan)}.top{position:sticky;top:0;z-index:5;background:#081624ee;backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px max(18px,calc((100vw - 1240px)/2));display:flex;gap:15px}.top a{text-decoration:none}.layout{max-width:1240px;margin:auto;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;padding:28px 20px 70px}.toc{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 90px);overflow:auto;background:#0c1c2d;border:1px solid var(--line);border-radius:14px;padding:15px}.toc ul{list-style:none;margin:0;padding:0}.toc li{margin:5px 0}.toc a{color:var(--muted);text-decoration:none;font-size:14px}.toc a:hover{color:var(--cyan)}article{background:linear-gradient(145deg,#10253c,#0b182a);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 18px 45px #0004}h1{font-size:clamp(32px,5vw,58px);line-height:1.1;margin-top:0;color:var(--text)}h2{font-size:29px;margin-top:42px;border-left:5px solid var(--orange);padding-left:12px;scroll-margin-top:75px}h3{font-size:21px;color:#d9f1ff;margin-top:28px;scroll-margin-top:75px}h4{color:#c7e6f5}blockquote{margin:18px 0;padding:12px 16px;border-left:4px solid var(--cyan);background:#0d263b;color:#dcefff}code{background:#06111c;border:1px solid #1c3850;border-radius:5px;color:#a9efff;padding:1px 5px;font-size:.92em}pre{background:#06101b;border:1px solid #24425a;border-radius:11px;padding:15px;overflow:auto;color:#c3f0ff}pre code{border:0;padding:0;background:none;color:inherit}table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}th{background:#15324d;color:#e4f7ff}td{color:#c7d7e4}li{margin:5px 0}.print{cursor:pointer;background:#15324d;color:var(--text);border:1px solid #3b6784;border-radius:7px;padding:5px 9px}@media(max-width:850px){.layout{display:block;padding:14px}.toc{position:static;max-height:none;margin-bottom:16px}.toc>ul{columns:2}.toc li{break-inside:avoid}article{padding:19px}h2{font-size:25px}}@media print{body{background:white;color:#111}.top,.toc{display:none}.layout{display:block;padding:0}article{background:white;color:#111;border:0;box-shadow:none;padding:0}h1,h2,h3,td{color:#111}blockquote{color:#222;background:#f5f5f5}pre{background:#f4f4f4;color:#111;border-color:#aaa}a{color:#111;text-decoration:none}}
+</style></head><body><nav class="top"><a href="index.html">← 面试学习首页</a><a href="fact-graph_腾讯PCG二面深挖手册.html">fact-graph 二面手册</a><button class="print" onclick="window.print()">打印 / 保存 PDF</button></nav><div class="layout"><aside class="toc"><strong>本页目录</strong><div class="toc">
+<ul>
+<li><a href="#pcg-web">腾讯 PCG 二面 Web 安全学习笔记</a><ul>
+<li><a href="#0">0. 面试答题总公式</a></li>
+<li><a href="#1-http">1. HTTP、认证与授权</a><ul>
+<li><a href="#11">1.1 一条请求要看什么</a></li>
+<li><a href="#12">1.2 认证和授权</a></li>
+<li><a href="#13-cookie">1.3 Cookie 属性</a></li>
+<li><a href="#14-jwt">1.4 JWT</a></li>
+</ul>
+</li>
+<li><a href="#2-sql">2. SQL 注入：重点掌握代码</a><ul>
+<li><a href="#21">2.1 原理</a></li>
+<li><a href="#22">2.2 参数化查询</a></li>
+<li><a href="#23">2.3 参数化的局限</a></li>
+<li><a href="#24">2.4 数据库最小权限</a></li>
+<li><a href="#25">2.5 错误回显</a></li>
+<li><a href="#26-sql">2.6 SQL 回归测试</a></li>
+<li><a href="#27-30">2.7 30 秒回答</a></li>
+</ul>
+</li>
+<li><a href="#3-xss">3. XSS：不要只说“过滤”</a><ul>
+<li><a href="#31">3.1 三种类型</a></li>
+<li><a href="#32">3.2 危险和安全写法</a></li>
+<li><a href="#33">3.3 为什么要按上下文编码</a></li>
+<li><a href="#34">3.4 修复和回归</a></li>
+</ul>
+</li>
+<li><a href="#4-idorbola">4. IDOR/BOLA：认证成功仍然可能越权</a><ul>
+<li><a href="#41">4.1 验证步骤</a></li>
+<li><a href="#42">4.2 根因和修复</a></li>
+<li><a href="#43">4.3 常见错误</a></li>
+<li><a href="#44-30">4.4 30 秒回答</a></li>
+</ul>
+</li>
+<li><a href="#5-ssrf">5. SSRF：白名单只是开始</a><ul>
+<li><a href="#51">5.1 原理</a></li>
+<li><a href="#52">5.2 安全验证</a></li>
+<li><a href="#53">5.3 修复措施</a></li>
+<li><a href="#54">5.4 回归测试</a></li>
+<li><a href="#55-30">5.5 30 秒回答</a></li>
+</ul>
+</li>
+<li><a href="#6-csrf-cors">6. CSRF 和 CORS</a><ul>
+<li><a href="#61-csrf">6.1 CSRF</a></li>
+<li><a href="#62-cors">6.2 CORS</a></li>
+</ul>
+</li>
+<li><a href="#7">7. 文件上传、路径穿越、命令注入</a><ul>
+<li><a href="#71">7.1 文件上传</a></li>
+<li><a href="#72">7.2 路径穿越</a></li>
+<li><a href="#73">7.3 命令注入</a></li>
+</ul>
+</li>
+<li><a href="#8-xxe">8. 反序列化、XXE、业务逻辑</a><ul>
+<li><a href="#81">8.1 反序列化</a></li>
+<li><a href="#82-xxe">8.2 XXE</a></li>
+<li><a href="#83">8.3 业务逻辑和竞态</a></li>
+</ul>
+</li>
+<li><a href="#9-web-agent">9. Web 安全和 Agent 的连接</a></li>
+<li><a href="#10">10. 二面高频回答</a><ul>
+<li><a href="#q">Q：你没有企业开发经验，为什么能做漏洞修复？</a></li>
+<li><a href="#q-sql">Q：参数化查询能解决所有 SQL 注入吗？</a></li>
+<li><a href="#q-ssrf">Q：为什么 SSRF 不能只用白名单？</a></li>
+<li><a href="#qxss-csp">Q：XSS 的 CSP 能不能代替编码？</a></li>
+<li><a href="#q-verifier">Q：你当前 verifier 实现到什么程度？</a></li>
+<li><a href="#q_1">Q：如何提高漏洞召回率？</a></li>
+</ul>
+</li>
+<li><a href="#11_1">11. 今晚练习顺序</a><ul>
+<li><a href="#_1">第一轮：背代码</a></li>
+<li><a href="#_2">第二轮：每题大声讲五句话</a></li>
+<li><a href="#_3">第三轮：重点模拟</a></li>
+</ul>
+</li>
+<li><a href="#12_1">12. 最后背诵版</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside><article><h1 id="pcg-web">腾讯 PCG 二面 Web 安全学习笔记</h1>
+<blockquote>
+<p>当前进度：一面已通过。下一轮重点补 Web 基础，特别是“具体怎么修、代码怎么写、怎样验证修复有效”。<br />
+学习目标：遇到每个漏洞，都能讲清 <strong>原理 → 修复实现 → 验证证据 → 回归测试</strong>。</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 面试答题总公式</h2>
+<p>遇到任何 Web 漏洞，按五步回答：</p>
+<ol>
+<li><strong>入口</strong>：攻击者能控制哪个参数、请求或文件？</li>
+<li><strong>危险点</strong>：输入最终进入了什么危险操作？</li>
+<li><strong>证据</strong>：如何用请求、响应、状态变化、日志或代码证明？</li>
+<li><strong>修复</strong>：服务端具体改哪里？</li>
+<li><strong>回归</strong>：怎样证明漏洞消失且正常业务没坏？</li>
+</ol>
+<p>不要只说“加强校验”“过滤特殊字符”。面试官想知道：<strong>在哪里校验、校验什么、为什么能切断攻击链</strong>。</p>
+<hr />
+<h2 id="1-http">1. HTTP、认证与授权</h2>
+<h3 id="11">1.1 一条请求要看什么</h3>
+<div class="codehilite"><pre><span></span><code>POST /api/orders/1002 HTTP/1.1
+Host: shop.example
+Cookie: session=...
+Authorization: Bearer ...
+Content-Type: application/json
+Origin: https://shop.example
+
+{"amount": 10, "url": "..."}
+</code></pre></div>
+
+<p>安全测试要观察：</p>
+<ul>
+<li>方法：GET、POST、PUT、PATCH、DELETE；</li>
+<li>路径参数和查询参数；</li>
+<li>Header、Cookie、Authorization；</li>
+<li>JSON、表单、XML、上传文件；</li>
+<li>当前身份：普通用户、管理员、不同租户；</li>
+<li>响应状态码、长度、字段、Header、时间和后续状态。</li>
+</ul>
+<p>HTTP 方法只是约定，不能代替权限。接口使用 DELETE，服务端仍然必须检查身份和对象权限。</p>
+<h3 id="12">1.2 认证和授权</h3>
+<ul>
+<li><strong>认证 Authentication</strong>：你是谁？</li>
+<li><strong>授权 Authorization</strong>：你能做什么？能操作哪个对象？</li>
+</ul>
+<p>面试句：</p>
+<blockquote>
+<p>Cookie、Session 或 JWT 负责携带身份上下文，服务端还要在每次对象操作时检查用户、角色、租户、对象归属和资源状态。</p>
+</blockquote>
+<h3 id="13-cookie">1.3 Cookie 属性</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>作用</th>
+<th>不能解决什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HttpOnly</td>
+<td>限制 JavaScript 读取 Cookie</td>
+<td>不能阻止浏览器自动携带</td>
+</tr>
+<tr>
+<td>Secure</td>
+<td>只通过 HTTPS 发送</td>
+<td>不能阻止服务端越权</td>
+</tr>
+<tr>
+<td>SameSite</td>
+<td>降低跨站请求携带 Cookie 的风险</td>
+<td>不能代替 CSRF token</td>
+</tr>
+<tr>
+<td>Domain/Path</td>
+<td>限制作用范围</td>
+<td>不能代替对象级授权</td>
+</tr>
+<tr>
+<td>Max-Age/Expires</td>
+<td>控制生命周期</td>
+<td>不能解决 Token 泄露后的所有问题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-jwt">1.4 JWT</h3>
+<p>验证 JWT 时要检查：</p>
+<ul>
+<li>签名和允许的算法；</li>
+<li>密钥是否正确；</li>
+<li>exp、nbf 等时间；</li>
+<li>iss、aud 是否匹配服务配置；</li>
+<li>撤销、轮换和重放策略；</li>
+<li>当前用户是否有权访问具体对象。</li>
+</ul>
+<p>签名正确只说明 token 没被修改，不等于当前操作一定有权限。</p>
+<hr />
+<h2 id="2-sql">2. SQL 注入：重点掌握代码</h2>
+<h3 id="21">2.1 原理</h3>
+<p>错误写法把用户输入拼接成 SQL 语法：</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 错误：username 进入了 SQL 语法</span>
+<span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SELECT id FROM users WHERE username = '</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">'"</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+</code></pre></div>
+
+<p>根因不是简单的“没有过滤特殊字符”，而是：</p>
+<blockquote>
+<p>不可信数据和 SQL 语法混在一起，数据库会重新解析输入中的特殊字符。</p>
+</blockquote>
+<h3 id="22">2.2 参数化查询</h3>
+<p>Python 常见写法：</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 正确：SQL 结构和用户数据分开</span>
+<span class="n">sql</span> <span class="o">=</span> <span class="s2">"SELECT id FROM users WHERE username = ?"</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">(</span><span class="n">username</span><span class="p">,))</span>
+<span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+</code></pre></div>
+
+<p>MySQL 驱动常见写法：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">sql</span> <span class="o">=</span> <span class="s2">"SELECT id, email FROM users WHERE username = </span><span class="si">%s</span><span class="s2">"</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">(</span><span class="n">username</span><span class="p">,))</span>
+</code></pre></div>
+
+<p>Java JDBC：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">String</span><span class="w"> </span><span class="n">sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"SELECT id FROM users WHERE username = ?"</span><span class="p">;</span>
+<span class="n">PreparedStatement</span><span class="w"> </span><span class="n">ps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connection</span><span class="p">.</span><span class="na">prepareStatement</span><span class="p">(</span><span class="n">sql</span><span class="p">);</span>
+<span class="n">ps</span><span class="p">.</span><span class="na">setString</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">username</span><span class="p">);</span>
+<span class="n">ResultSet</span><span class="w"> </span><span class="n">rs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ps</span><span class="p">.</span><span class="na">executeQuery</span><span class="p">();</span>
+</code></pre></div>
+
+<p>Node.js：</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">rows</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span>
+<span class="w">  </span><span class="s2">"SELECT id, username FROM users WHERE username = ?"</span><span class="p">,</span>
+<span class="w">  </span><span class="p">[</span><span class="nx">username</span><span class="p">]</span>
+<span class="p">);</span>
+</code></pre></div>
+
+<p>记住四点：</p>
+<ul>
+<li>占位符由数据库驱动处理；</li>
+<li>参数作为 execute 的参数传入；</li>
+<li>不要先用字符串格式化再传给 execute；</li>
+<li>不要自己给输入加引号。</li>
+</ul>
+<h3 id="23">2.3 参数化的局限</h3>
+<p>参数化主要处理“值”，通常不能直接处理：</p>
+<ul>
+<li>动态表名；</li>
+<li>动态列名；</li>
+<li>动态排序字段；</li>
+<li>动态 SQL 结构。</li>
+</ul>
+<p>错误写法：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SELECT * FROM users ORDER BY </span><span class="si">{</span><span class="n">order_by</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+
+<p>正确做法：服务端固定映射。</p>
+<div class="codehilite"><pre><span></span><code><span class="n">ORDER_FIELDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"username"</span><span class="p">,</span>
+    <span class="s2">"created"</span><span class="p">:</span> <span class="s2">"created_at"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">column</span> <span class="o">=</span> <span class="n">ORDER_FIELDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">order_key</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"invalid order field"</span><span class="p">)</span>
+
+<span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"SELECT id, username FROM users ORDER BY </span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">"</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+</code></pre></div>
+
+<p>这里的 f-string 只拼接服务端字典中的固定值，不能拼接原始用户输入。</p>
+<h3 id="24">2.4 数据库最小权限</h3>
+<p>应用账号只拥有业务需要的权限：</p>
+<ul>
+<li>不使用 root 连接业务；</li>
+<li>普通查询账号不拥有 DROP、FILE、SUPER 等权限；</li>
+<li>读写账号分离；</li>
+<li>不同服务尽量使用不同账号；</li>
+<li>凭据放在安全的配置或密钥系统中。</li>
+</ul>
+<h3 id="25">2.5 错误回显</h3>
+<p>服务端日志保留详细错误，客户端只返回通用信息：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">DatabaseError</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"database query failed"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="s2">"internal error"</span><span class="p">},</span> <span class="mi">500</span>
+</code></pre></div>
+
+<p>不要向客户端返回 SQL、堆栈、数据库地址和账号信息。</p>
+<h3 id="26-sql">2.6 SQL 回归测试</h3>
+<p>修复后检查：</p>
+<ul>
+<li>普通查询仍正常；</li>
+<li>引号、括号、注释符等特殊输入只是普通字符串；</li>
+<li>布尔差异和时间差异不再改变业务结果；</li>
+<li>登录、搜索、分页、排序、筛选都覆盖；</li>
+<li>动态排序只接受 allowlist 字段；</li>
+<li>代码中没有绕过 ORM 的字符串拼接；</li>
+<li>数据库账号权限符合最小权限。</li>
+</ul>
+<h3 id="27-30">2.7 30 秒回答</h3>
+<blockquote>
+<p>SQL 注入的根因是把不可信输入通过字符串拼接变成 SQL 语法。查询值使用参数化或预编译，让输入始终作为数据；动态表名、列名和排序字段不能直接参数化，就使用服务端固定映射或严格白名单。数据库账号还要最小权限，错误信息不能向客户端回显。回归时覆盖特殊输入、登录搜索排序等路径，确认输入不会改变 SQL 结构。</p>
+</blockquote>
+<hr />
+<h2 id="3-xss">3. XSS：不要只说“过滤”</h2>
+<h3 id="31">3.1 三种类型</h3>
+<p><strong>反射型</strong>：输入出现在当前响应中，用户访问特制链接时触发。</p>
+<p><strong>存储型</strong>：输入被保存，其他用户打开页面时触发。</p>
+<p><strong>DOM 型</strong>：前端 JavaScript 从 URL、Hash、postMessage 或存储读取数据，再写入 innerHTML、eval 等危险 sink。它不一定经过服务器。</p>
+<h3 id="32">3.2 危险和安全写法</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1">// 危险：把输入解析成 HTML</span>
+<span class="nx">result</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">userInput</span><span class="p">;</span>
+
+<span class="c1">// 安全：作为普通文本</span>
+<span class="nx">result</span><span class="p">.</span><span class="nx">textContent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">userInput</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="33">3.3 为什么要按上下文编码</h3>
+<p>浏览器对不同位置使用不同语法：</p>
+<ul>
+<li>HTML 文本；</li>
+<li>HTML 属性；</li>
+<li>URL；</li>
+<li>JavaScript 字符串；</li>
+<li>CSS；</li>
+<li>DOM API。</li>
+</ul>
+<p>因此 HTML 编码不能直接代替 JavaScript 或 URL 编码。原则是：</p>
+<blockquote>
+<p>在最终输出位置，按照那个位置的解析规则编码；优先使用安全模板和安全 DOM API。</p>
+</blockquote>
+<h3 id="34">3.4 修复和回归</h3>
+<p>修复：</p>
+<ul>
+<li>模板默认转义；</li>
+<li>DOM 文本使用 textContent；</li>
+<li>URL 限制 scheme；</li>
+<li>富文本使用经过审计的 Sanitizer；</li>
+<li>Cookie 设置 HttpOnly、Secure、合理 SameSite；</li>
+<li>CSP 作为辅助防护。</li>
+</ul>
+<p>回归：</p>
+<ul>
+<li>反射、存储、DOM 三条路径都测；</li>
+<li>HTML、属性、URL、JS 上下文分别测；</li>
+<li>用唯一无害 marker 检查是否进入危险 sink；</li>
+<li>确认 marker 只作为文本显示；</li>
+<li>检查历史存量数据。</li>
+</ul>
+<p>面试句：</p>
+<blockquote>
+<p>CSP 是浏览器端的辅助控制，策略可能不完整，也不能修复数据进入错误输出上下文的问题；根因修复仍然是安全 API 和正确的上下文编码。</p>
+</blockquote>
+<hr />
+<h2 id="4-idorbola">4. IDOR/BOLA：认证成功仍然可能越权</h2>
+<h3 id="41">4.1 验证步骤</h3>
+<p>准备用户 A、用户 B、管理员和不同租户。</p>
+<p>先用 A 访问自己的对象：</p>
+<div class="codehilite"><pre><span></span><code>GET /api/orders/1001
+Cookie: session=user_A
+</code></pre></div>
+
+<p>然后只替换对象 ID：</p>
+<div class="codehilite"><pre><span></span><code>GET /api/orders/1002
+Cookie: session=user_A
+</code></pre></div>
+
+<p>如果 1002 属于 B，而 A 能读取、修改、删除或导出，就可能是 BOLA/IDOR。</p>
+<p>要记录：</p>
+<ul>
+<li>A 访问自己对象的基线；</li>
+<li>A 访问 B 对象的响应；</li>
+<li>状态码、响应字段、长度和时间；</li>
+<li>是否发生修改、删除或导出；</li>
+<li>审计日志；</li>
+<li>不同角色和租户结果。</li>
+</ul>
+<h3 id="42">4.2 根因和修复</h3>
+<p>根因是服务端只检查：</p>
+<div class="codehilite"><pre><span></span><code>session 是否有效
+</code></pre></div>
+
+<p>没有检查：</p>
+<div class="codehilite"><pre><span></span><code>当前用户是否拥有这个对象
+当前租户是否匹配
+当前角色是否允许这个动作
+资源当前状态是否允许这个操作
+</code></pre></div>
+
+<p>修复示例：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_order</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">order_id</span><span class="p">):</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">load_order</span><span class="p">(</span><span class="n">order_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NotFound</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">tenant_id</span> <span class="o">!=</span> <span class="n">current_user</span><span class="o">.</span><span class="n">tenant_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Forbidden</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">order</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">!=</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">current_user</span><span class="o">.</span><span class="n">is_admin</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">Forbidden</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">order</span>
+</code></pre></div>
+
+<p>写操作也要重新检查，不能只在读取时检查。</p>
+<h3 id="43">4.3 常见错误</h3>
+<ul>
+<li>只在前端隐藏按钮；</li>
+<li>换成 UUID 就认为安全；</li>
+<li>只检查用户登录；</li>
+<li>只保护页面，不保护 API；</li>
+<li>只测 GET，不测 PATCH、DELETE、导出和批量接口。</li>
+</ul>
+<h3 id="44-30">4.4 30 秒回答</h3>
+<blockquote>
+<p>我会用 A、B 两个身份，先让 A 访问自己的对象，再只替换对象 ID 访问 B 的对象，比较响应内容、状态变化和日志，并覆盖读、改、删、导出和批量接口。根因是服务端缺少对象级授权。修复是在每次对象操作时校验用户、租户、角色和资源归属，UUID 和前端隐藏都不能替代授权。</p>
+</blockquote>
+<hr />
+<h2 id="5-ssrf">5. SSRF：白名单只是开始</h2>
+<h3 id="51">5.1 原理</h3>
+<p>服务端存在抓取 URL、图片导入、网页预览或 Webhook 功能。攻击者控制 URL 后，服务器替攻击者发起网络请求。</p>
+<p>危险链：</p>
+<div class="codehilite"><pre><span></span><code>用户输入 URL
+    ↓
+服务端 HTTP 客户端
+    ↓
+内网、loopback、metadata 或其他不应访问的资源
+    ↓
+响应回流给攻击者或进入 Agent 上下文
+</code></pre></div>
+
+<h3 id="52">5.2 安全验证</h3>
+<p>只在授权靶场做：</p>
+<ol>
+<li>搭建自己控制的 canary 服务；</li>
+<li>让目标功能请求 canary；</li>
+<li>通过 canary 日志的 request-id、来源、路径和时间证明服务端发起请求；</li>
+<li>使用本地 mock 私网服务、mock redirect 和 DNS 测试边界；</li>
+<li>不访问真实公司内网、云 metadata 或第三方系统。</li>
+</ol>
+<p>公网 URL 能收到请求，只证明存在服务端请求行为。还要判断它是否突破了产品预期访问范围。</p>
+<h3 id="53">5.3 修复措施</h3>
+<ul>
+<li>限制 scheme、host、端口；</li>
+<li>使用出站 allowlist；</li>
+<li>DNS 解析后检查真实 IPv4/IPv6；</li>
+<li>阻断 loopback、私网、链路本地和云 metadata；</li>
+<li>防 DNS rebinding；</li>
+<li>重定向逐跳重新解析和检查，或直接禁用；</li>
+<li>限制响应大小、响应类型、超时和重定向次数；</li>
+<li>从网络出口层限制访问；</li>
+<li>不把完整内网响应直接送入模型上下文；</li>
+<li>Agent 工具和凭据使用最小权限。</li>
+</ul>
+<h3 id="54">5.4 回归测试</h3>
+<p>覆盖：</p>
+<div class="codehilite"><pre><span></span><code>127.0.0.1
+IPv6 loopback
+私网地址
+链路本地地址
+域名解析变化
+重定向
+编码形式
+非 HTTP scheme
+不同端口
+超大响应
+</code></pre></div>
+
+<p>不能只做字符串黑名单。字符串判断容易被 IPv6、编码、DNS rebinding 和重定向绕过。</p>
+<h3 id="55-30">5.5 30 秒回答</h3>
+<blockquote>
+<p>SSRF 是服务端替用户访问攻击者控制的 URL。验证时我会在授权环境用 canary 和 mock 私网服务证明服务端请求原语，并观察 request-id、解析地址和重定向链。修复需要出站 allowlist、解析后检查 IPv4/IPv6 和内网地址、逐跳检查重定向、防 DNS rebinding、限制协议端口响应和超时，不能只做字符串黑名单。</p>
+</blockquote>
+<hr />
+<h2 id="6-csrf-cors">6. CSRF 和 CORS</h2>
+<h3 id="61-csrf">6.1 CSRF</h3>
+<p>受害者已经登录，浏览器自动带上 Cookie，攻击者诱导浏览器发起状态改变请求。</p>
+<p>修复：</p>
+<ul>
+<li>CSRF token；</li>
+<li>校验 Origin/Referer；</li>
+<li>合理设置 SameSite；</li>
+<li>状态改变不用 GET；</li>
+<li>关键操作重新认证。</li>
+</ul>
+<h3 id="62-cors">6.2 CORS</h3>
+<p>CORS 控制跨源页面能否读取响应。它不能单独替代 CSRF 防护，因为攻击者可能不需要读取响应，只要请求产生副作用。</p>
+<p>面试句：</p>
+<blockquote>
+<p>CORS 主要控制跨源读取，CSRF 防止利用受害者浏览器凭据进行跨站状态改变，两者边界不同。</p>
+</blockquote>
+<hr />
+<h2 id="7">7. 文件上传、路径穿越、命令注入</h2>
+<h3 id="71">7.1 文件上传</h3>
+<p>不要只检查前端扩展名。服务端要：</p>
+<ul>
+<li>检查内容、魔数、大小和类型；</li>
+<li>随机生成文件名；</li>
+<li>存到 Web 根目录外或对象存储；</li>
+<li>上传目录禁止脚本执行；</li>
+<li>下载设置安全 Content-Type；</li>
+<li>限制压缩包解压路径；</li>
+<li>文件权限最小化；</li>
+<li>必要时病毒扫描。</li>
+</ul>
+<h3 id="72">7.2 路径穿越</h3>
+<p>错误：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">path</span> <span class="o">=</span> <span class="s2">"/srv/files/"</span> <span class="o">+</span> <span class="n">user_filename</span>
+<span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</code></pre></div>
+
+<p>修复：</p>
+<ol>
+<li>规范化路径；</li>
+<li>确认结果仍在固定基目录；</li>
+<li>更好的是用资源 ID 映射到服务端文件；</li>
+<li>限制服务账号权限；</li>
+<li>覆盖 Unix/Windows 分隔符、编码和符号链接。</li>
+</ol>
+<h3 id="73">7.3 命令注入</h3>
+<p>错误：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"ping "</span> <span class="o">+</span> <span class="n">user_input</span><span class="p">)</span>
+</code></pre></div>
+
+<p>更安全：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">"ping"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">,</span> <span class="n">validated_host</span><span class="p">],</span>
+    <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>还要对 validated_host 做严格校验，使用低权限账号，限制环境变量、工作目录、资源和网络。</p>
+<hr />
+<h2 id="8-xxe">8. 反序列化、XXE、业务逻辑</h2>
+<h3 id="81">8.1 反序列化</h3>
+<p>不可信对象在恢复过程中可能触发构造函数、类型逻辑或 gadget 链。</p>
+<p>修复：</p>
+<ul>
+<li>不对不可信数据使用原生对象反序列化；</li>
+<li>使用带 schema 的数据格式；</li>
+<li>类型 allowlist；</li>
+<li>签名和完整性校验；</li>
+<li>低权限隔离解析；</li>
+<li>更新漏洞库。</li>
+</ul>
+<h3 id="82-xxe">8.2 XXE</h3>
+<p>XML 解析器处理外部实体，可能读取本地文件或发起网络请求。</p>
+<p>修复：</p>
+<ul>
+<li>禁用 DTD；</li>
+<li>禁用外部实体；</li>
+<li>禁止外部 schema；</li>
+<li>使用安全 XML 解析器；</li>
+<li>限制 XML 大小和嵌套深度。</li>
+</ul>
+<h3 id="83">8.3 业务逻辑和竞态</h3>
+<p>每个接口单独看似安全，但多步骤、并发或状态转换可能绕过规则。</p>
+<p>修复：</p>
+<ul>
+<li>服务端状态机；</li>
+<li>事务；</li>
+<li>幂等键；</li>
+<li>版本号或行锁；</li>
+<li>重放检测；</li>
+<li>金额、库存、权限变更做原子检查。</li>
+</ul>
+<hr />
+<h2 id="9-web-agent">9. Web 安全和 Agent 的连接</h2>
+<p>智能渗透 Agent 可以拆成：</p>
+<div class="codehilite"><pre><span></span><code>scope
+  ↓
+资产/API/JS 发现
+  ↓
+登录态和角色状态
+  ↓
+参数与业务流程覆盖
+  ↓
+漏洞假设
+  ↓
+工具调用
+  ↓
+独立验证
+  ↓
+证据、去重、报告
+</code></pre></div>
+
+<p>每个 turn 至少记录：</p>
+<div class="codehilite"><pre><span></span><code>observation
+action
+tool_result
+policy_decision
+evidence
+verifier_result
+termination
+</code></pre></div>
+
+<p>如果 Agent 已经发出越权请求但没有报告，要逐层检查：</p>
+<ol>
+<li>请求是否真的发出；</li>
+<li>工具结果是否保存；</li>
+<li>是否提取了 A/B 响应差异；</li>
+<li>verifier 是否判为证据不足；</li>
+<li>报告聚合或去重是否丢失。</li>
+</ol>
+<p>不要直接说“肯定是 verifier”。</p>
+<hr />
+<h2 id="10">10. 二面高频回答</h2>
+<h3 id="q">Q：你没有企业开发经验，为什么能做漏洞修复？</h3>
+<blockquote>
+<p>我过去的优势主要在漏洞发现、复现和根因分析，真实业务防御经验还需要补齐。现在我会按服务端控制来回答修复：参数化查询、对象级授权、上下文编码、出站网络限制和最小权限，并通过代码审查和回归用例验证。这个岗位能让我把攻防经验转化成业务安全工程能力。</p>
+</blockquote>
+<h3 id="q-sql">Q：参数化查询能解决所有 SQL 注入吗？</h3>
+<blockquote>
+<p>不能。它主要处理查询值。动态表名、列名、排序字段要用服务端固定映射或严格白名单；动态 SQL 结构要重新设计，数据库账号也要最小权限。</p>
+</blockquote>
+<h3 id="q-ssrf">Q：为什么 SSRF 不能只用白名单？</h3>
+<blockquote>
+<p>如果白名单只是域名字符串匹配，仍可能被 DNS rebinding、重定向、IPv6、编码和解析变化绕过。需要解析后检查真实 IP，逐跳检查重定向，并在网络出口层限制目标。</p>
+</blockquote>
+<h3 id="qxss-csp">Q：XSS 的 CSP 能不能代替编码？</h3>
+<blockquote>
+<p>不能。CSP 是浏览器端辅助控制，不能修复数据进入错误输出上下文的问题。根因修复仍然是安全 API 和正确的上下文编码。</p>
+</blockquote>
+<h3 id="q-verifier">Q：你当前 verifier 实现到什么程度？</h3>
+<blockquote>
+<p>当前有 verify 流程，会读取 intent 和执行结果后进行二次审阅，但还不会自动复现所有安全请求，也没有完整持久化独立 verdict。工程化时我会加入结构化证据、差分请求、canary 日志和 confirmed/inconclusive/rejected 状态。</p>
+</blockquote>
+<h3 id="q_1">Q：如何提高漏洞召回率？</h3>
+<blockquote>
+<p>先固定授权题集、ground truth、账号、预算和 verifier，记录完整轨迹。然后把漏检分成资产发现、认证状态、参数覆盖、假设生成、工具执行、验证器和报告聚合，一次只改一个环节做消融，同时看 recall、precision、重复率、成本和延迟。</p>
+</blockquote>
+<hr />
+<h2 id="11_1">11. 今晚练习顺序</h2>
+<h3 id="_1">第一轮：背代码</h3>
+<ol>
+<li>Python SQL 参数化；</li>
+<li>Java PreparedStatement；</li>
+<li>动态排序字段 allowlist；</li>
+<li>对象级授权伪代码；</li>
+<li>textContent 和 innerHTML；</li>
+<li>subprocess.run 配合 shell=False。</li>
+</ol>
+<h3 id="_2">第二轮：每题大声讲五句话</h3>
+<div class="codehilite"><pre><span></span><code>入口是什么？
+危险点是什么？
+证据是什么？
+服务端改哪里？
+怎么回归？
+</code></pre></div>
+
+<h3 id="_3">第三轮：重点模拟</h3>
+<ol>
+<li>用 Python 写安全查询；</li>
+<li>解释动态表名为什么不能直接参数化；</li>
+<li>设计两个用户验证 IDOR；</li>
+<li>解释 SSRF 的 DNS rebinding 和重定向；</li>
+<li>解释 CORS 和 CSRF；</li>
+<li>说清当前 verifier 的真实边界；</li>
+<li>设计一个 Agent 漏检分类表。</li>
+</ol>
+<hr />
+<h2 id="12_1">12. 最后背诵版</h2>
+<blockquote>
+<p>SQL 注入是数据进入 SQL 语法，修复用参数化；动态标识符用固定映射或白名单，数据库最小权限。<br />
+XSS 是数据进入浏览器代码，按最终输出上下文编码，优先安全 API，CSP 做辅助。<br />
+IDOR 是认证成功但对象级授权缺失，服务端每次检查用户、租户、角色和资源关系。<br />
+SSRF 是服务端替用户访问网络，要做出站 allowlist、解析后 IP 检查、IPv4/IPv6、重定向和 DNS rebinding 防护。<br />
+CSRF 防跨站状态改变，CORS 管跨源读取，两者不能混淆。<br />
+Agent 评测要固定 ground truth 和预算，按 Discovery、Auth、Coverage、Hypothesis、Tool、Verifier、Report 分桶 FN，再用消融证明改动有效。</p>
+</blockquote></article></div></body></html>
